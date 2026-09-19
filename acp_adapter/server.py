@@ -17,7 +17,7 @@ from typing import Any, Callable, Deque, Optional
 import acp
 from acp.schema import (
     AgentCapabilities, AgentMessageChunk, AuthenticateResponse, ClientCapabilities, ForkSessionResponse,
-    Implementation, InitializeResponse, ListSessionsResponse, LoadSessionResponse, McpServerHttp, McpServerSse,
+    Implementation, InitializeResponse, ListSessionsResponse, LoadSessionResponse, McpCapabilities, McpServerHttp, McpServerSse,
     McpServerStdio, ModelInfo, NewSessionResponse, PromptCapabilities, PromptResponse, ResumeSessionResponse,
     SessionCapabilities, SessionForkCapabilities, SessionInfo, SessionInfoUpdate, SessionListCapabilities,
     SessionMode, SessionModeState, SessionModelState, SessionResumeCapabilities, SetSessionConfigOptionResponse,
@@ -514,6 +514,7 @@ class HermesACPAgent(SlashCommandsMixin, acp.Agent):
             agent_info=Implementation(name="hermes-agent", version=HERMES_VERSION),
             agent_capabilities=AgentCapabilities(
                 load_session=True,
+                mcp_capabilities=McpCapabilities(http=True),
                 prompt_capabilities=PromptCapabilities(image=True),
                 session_capabilities=SessionCapabilities(
                     fork=SessionForkCapabilities(), list=SessionListCapabilities(), resume=SessionResumeCapabilities(),
