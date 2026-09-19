@@ -97,9 +97,9 @@ jobs:
           scripts/run_tests.sh
         env:
           # The upstream repository pins this to 96 for its 96-core larger
-          # runner. Leave HERMES_TEST_WORKERS unset in this fork so
-          # scripts/run_tests_parallel.py derives a portable limit from the
-          # standard GitHub-hosted runner's available CPU count.
+          # runner. Standard ubuntu-latest runners are much smaller; keep one
+          # test-file worker per expected CPU core to reduce contention.
+          HERMES_TEST_WORKERS: 4
           # Ensure tests don't accidentally call real APIs
           OPENROUTER_API_KEY: ""
           OPENAI_API_KEY: ""
