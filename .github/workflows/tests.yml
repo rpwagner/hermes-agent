@@ -112,11 +112,10 @@ jobs:
           source .venv/bin/activate
           scripts/run_tests.sh
         env:
-          # This is the maximum number of test FILES that run together.
-          # The upstream repository tunes this for a 96-core larger runner.
-          # Standard GitHub-hosted runners are much smaller, so keep the
-          # portable one-worker-per-core rule instead of oversubscribing.
-          HERMES_TEST_WORKERS: 4
+          # The upstream repository pins this to 96 for its 96-core larger
+          # runner. Leave HERMES_TEST_WORKERS unset in this fork so
+          # scripts/run_tests_parallel.py derives a portable limit from the
+          # standard GitHub-hosted runner's available CPU count.
           # Ensure tests don't accidentally call real APIs
           OPENROUTER_API_KEY: ""
           OPENAI_API_KEY: ""
