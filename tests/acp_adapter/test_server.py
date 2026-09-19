@@ -98,6 +98,21 @@ class TestInitialize:
         assert isinstance(resp, InitializeResponse)
         assert resp.protocol_version == acp.PROTOCOL_VERSION
 
+    @pytest.mark.asyncio
+    async def test_initialize_advertises_http_mcp_only(self, agent):
+        resp = await agent.initialize(protocol_version=1)
+
+        assert resp.agent_capabilities.mcp_capabilities is not None
+        assert resp.agent_capabilities.mcp_capabilities.http is True
+        assert resp.agent_capabilities.mcp_capabilities.sse is False
+
+    @pytest.mark.asyncio
+    async def test_initialize_serializes_http_mcp_capability(self, agent):
+        resp = await agent.initialize(protocol_version=1)
+
+        payload = resp.agent_capabilities.model_dump(by_alias=True, exclude_none=True)
+        assert payload["mcpCapabilities"] == {"http": True, "sse": False}
+
 
 
 
