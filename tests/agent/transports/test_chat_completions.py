@@ -287,6 +287,49 @@ class TestChatCompletionsBuildKwargs:
         kw = transport.build_kwargs(model="gpt-4o", messages=msgs, tools=tools)
         assert kw["tools"] == tools
 
+    def test_gpt5_known_provider_uses_developer_role(self, transport):
+        msgs = [
+            {"role": "system", "content": "Follow instructions."},
+            {"role": "user", "content": "Hello"},
+        ]
+
+        kw = transport.build_kwargs(model="gpt-5.6-sol", messages=msgs)
+
+        assert kw["messages"][0]["role"] == "developer"
+        assert msgs[0]["role"] == "system"
+
+    def test_gpt5_custom_profile_preserves_system_role(self, transport):
+        from providers import get_provider_profile
+
+        msgs = [
+            {"role": "system", "content": "Follow instructions."},
+            {"role": "user", "content": "Hello"},
+        ]
+
+        kw = transport.build_kwargs(
+            model="GPT-5.6 Sol",
+            messages=msgs,
+            provider_profile=get_provider_profile("custom"),
+            base_url="https://gateway.example.test/v1",
+        )
+
+        assert kw["messages"][0]["role"] == "system"
+        assert msgs[0]["role"] == "system"
+
+    def test_gpt5_legacy_custom_route_preserves_system_role(self, transport):
+        msgs = [
+            {"role": "system", "content": "Follow instructions."},
+            {"role": "user", "content": "Hello"},
+        ]
+
+        kw = transport.build_kwargs(
+            model="gpt-5.6-sol",
+            messages=msgs,
+            is_custom_provider=True,
+        )
+
+        assert kw["messages"][0]["role"] == "system"
+
     def test_openrouter_provider_prefs(self, transport):
         from providers import get_provider_profile
         profile = get_provider_profile("openrouter")
