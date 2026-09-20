@@ -250,10 +250,18 @@ def _pareto_score(raw: Any) -> float | None:
     return score if score is not None and 0.0 <= score <= 1.0 else None
 
 
-def _swap_developer_role(sanitized: list, model_lower: str) -> list:
-    """GPT-5/Codex models take a ``developer`` role instead of ``system``."""
+def _swap_developer_role(
+    sanitized: list, model_lower: str, *, is_custom_provider: bool = False
+) -> list:
+    """Use ``developer`` for GPT-5/Codex only when the route is not generic custom.
+
+    A model name does not prove that an OpenAI-compatible custom endpoint accepts
+    OpenAI's newer ``developer`` role. Keep the broadly-compatible ``system``
+    role for custom routes; known providers retain the stronger-role behavior.
+    """
     if (
-        sanitized and isinstance(sanitized[0], dict) and sanitized[0].get("role") == "system"
+        not is_custom_provider
+        and sanitized and isinstance(sanitized[0], dict) and sanitized[0].get("role") == "system"
         and any(p in model_lower for p in DEVELOPER_ROLE_MODELS)
     ):
         return [{**sanitized[0], "role": "developer"}, *sanitized[1:]]
@@ -382,7 +390,11 @@ class ChatCompletionsTransport(ProviderTransport):
         if _profile:
             return self._build_kwargs_from_profile(_profile, model, sanitized, tools, params)
 
-        sanitized = _swap_developer_role(sanitized, params.get("model_lower", (model or "").lower()))
+        sanitized = _swap_developer_role(
+            sanitized,
+            params.get("model_lower", (model or "").lower()),
+            is_custom_provider=bool(params.get("is_custom_provider")),
+        )
         api_kwargs = _base_kwargs(model, sanitized, tools, params)
 
         is_kimi = params.get("is_kimi", False)
@@ -457,7 +469,11 @@ class ChatCompletionsTransport(ProviderTransport):
 
     def _build_kwargs_from_profile(self, profile, model, sanitized, tools, params):
         """Build API kwargs from a ProviderProfile — every quirk comes from the profile object."""
-        sanitized = _swap_developer_role(profile.prepare_messages(sanitized), (model or "").lower())
+        sanitized = _swap_developer_role(
+            profile.prepare_messages(sanitized),
+            (model or "").lower(),
+            is_custom_provider=str(getattr(profile, "name", "") or "").strip().lower() == "custom",
+        )
         api_kwargs = _base_kwargs(model, sanitized, tools, params, profile=profile)
 
         reasoning_config = _reasoning_config_for_model(model, params.get("reasoning_config"))
